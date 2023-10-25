@@ -1,7 +1,11 @@
 #!/bin/bash
 
+echo "Current path: $(pwd)"
+
 # move to apr-tool directory 
 cd content/apr-tool
+
+echo "Current path: $(pwd)"
 
 # Clone the Defects4J repository
 git clone https://github.com/rjust/defects4j.git
