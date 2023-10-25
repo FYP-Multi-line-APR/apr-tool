@@ -12,13 +12,13 @@ if __name__ == '__main__':
     else:
         checkout=False
         
-    
+    CURRENT_PATH = "/content/apr-tool"
     
     #checkout the project
     if checkout:
-        if os.path.exists("./projects/"+project+bug):
-            os.system("rm -rf ./projects/"+project+bug)
-        checkout_project="defects4j checkout -p " + project +" -v "+ bug+"b  -w ./projects/"+project+bug
+        if os.path.exists(CURRENT_PATH + "/projects/"+project+bug):
+            os.system("rm -rf "+ CURRENT_PATH +"/projects/"+project+bug)
+        checkout_project="defects4j checkout -p " + project +" -v "+ bug+"b  -w" +CURRENT_PATH +"/projects/"+project+bug
         os.system(checkout_project)
     
     
