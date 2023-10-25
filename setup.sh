@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# move to apr-tool directory 
+cd apr-tool
+
 # Clone the Defects4J repository
 git clone https://github.com/rjust/defects4j.git
 
