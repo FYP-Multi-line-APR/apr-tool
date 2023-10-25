@@ -21,7 +21,6 @@ cd defects4j
 # change directory to the root
 cd ..
 
-cd apr-tool
 
 # setting up path variables
 python setting_up_path_variables.py
