@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # move to apr-tool directory 
-cd apr-tool
+cd content/apr-tool
 
 # Clone the Defects4J repository
 git clone https://github.com/rjust/defects4j.git
@@ -16,13 +16,13 @@ sudo apt-get install -y cpanminus
 cpanm --installdeps .
 
 # Change directory to the Defects4J repository
-cd defects4j
+cd content/defects4j
 
 # installing defects4j
 !./init.sh
 
 # change directory to the root
-cd ..
+cd content/apr-tool
 
 
 # setting up path variables
