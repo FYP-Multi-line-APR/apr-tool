@@ -3,7 +3,7 @@
 echo "Current path: $(pwd)"
 
 # move to apr-tool directory 
-cd content/apr-tool
+cd apr-tool
 
 echo "Current path: $(pwd)"
 
