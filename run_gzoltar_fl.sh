@@ -13,7 +13,6 @@
 # - `java` and `javac` needs to be set and must point to the Java installation.
 #
 # ------------------------------------------------------------------------------
-echo "FUCK"
 SCRIPT_DIR=$(cd `dirname ${BASH_SOURCE[0]}` && pwd)
 echo "SCRIP_DIR"+$SCRIPT_DIR
 #

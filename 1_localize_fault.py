@@ -20,6 +20,8 @@ if __name__ == '__main__':
             os.system("rm -rf "+ CURRENT_PATH +"/projects/"+project+bug)
         checkout_project="defects4j checkout -p " + project +" -v "+ bug+"b  -w" +CURRENT_PATH +"/projects/"+project+bug
         os.system(checkout_project)
+
+    print("=====================checkout completed========================")
     
     
     #get project information
@@ -29,6 +31,8 @@ if __name__ == '__main__':
     tests = infos.split("List of modified sources:")[0]
     tests = tests.split("Root cause in triggering tests:")[1]
     sources = infos.split("List of modified sources:")[1]
+
+    print("=====================Project information collected========================")
     
     #infomation of failing tests
     fail_tests = ""
@@ -41,6 +45,8 @@ if __name__ == '__main__':
                 fail_tests+=t+"#*:" 
     fail_tests = fail_tests[:len(fail_tests)-1]
     print("fail_tests:"+fail_tests)
+
+    print("=====================Information of failed test collected========================")
     
     source_files = ""
     sources=sources.split(" - ")
@@ -51,25 +57,29 @@ if __name__ == '__main__':
             source_files+=s+":" 
     source_files = source_files[:len(source_files)-1]
     print("source_files:"+source_files)
+
+    print("=====================Source files are founded========================")
     
     #copy run.sh to the target project
     if "Closure" in project:
-        os.system("cp run_gzoltar_fl_Closure-after.sh ./projects/"+project+bug)
-        os.system('mv  ./projects/'+project+bug+'/run_gzoltar_fl_Closure-after.sh  ./projects/'+project+bug+'/run_gzoltar_fl.sh')
+        os.system(f"cp {CURRENT_PATH}/run_gzoltar_fl_Closure-after.sh {CURRENT_PATH}/projects/"+project+bug)
+        os.system(f'mv  {CURRENT_PATH}/projects/'+project+bug+'/run_gzoltar_fl_Closure-after.sh  ./projects/'+project+bug+'/run_gzoltar_fl.sh')
     else:
-        os.system("cp run_gzoltar_fl.sh ./projects/"+project+bug)
-    
-    
+        os.system(f"cp {CURRENT_PATH}/run_gzoltar_fl.sh {CURRENT_PATH}/projects/"+project+bug)
+  
+
+   
     #compile target project
-    os.chdir("./projects/"+project+bug)
+    os.chdir(f"{CURRENT_PATH}/projects/"+project+bug)
     os.system("defects4j compile")
-    
+    print("=====================Target project compiled========================")
     
     currentpath=os.path.dirname(os.path.realpath(__file__))
     print("currentpath:"+currentpath)
     #create build folder
     if "Cli" in project or 'Math' in project or 'Compress' in project or 'Gson' in project or 'Csv' in project  or 'JacksonCore' in project  or 'JacksonDatabind' in project or 'Jsoup' in project:
         if os.path.exists("./target"):
+            print("target exists")
             os.system("mkdir build")
             os.system("mkdir build-tests")
             os.system("cp -rf ./target/classes/*" + "  ./build/")
@@ -121,7 +131,7 @@ if __name__ == '__main__':
             os.system("cp -rf ./target/test-classes/*" + "  ./build/")
             os.system("cp -rf ./target/test-classes/*" + "  ./build-tests/")
 
-            
+    print("=====================Project Builed========================")        
     
     #execute the Gzoltar FL
     print("final execution completed")
@@ -131,21 +141,23 @@ if __name__ == '__main__':
     files = os.listdir(currentpath)
     print("CP\WD",os.getcwd())
 
-    command = ["chmod", "+x", "./run_gzoltar_fl.sh"]
-
+    command = ["chmod", "+x", f"{CURRENT_PATH}/run_gzoltar_fl.sh"]
     # Use subprocess.run() to execute the command
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-
-
-
-    print("SOURCE   ",source_files)
-    fl_result = os.popen("./run_gzoltar_fl.sh --instrumentation online --failtests "+fail_tests+" --sourcefiles "+source_files).read()       
-    print(fl_result)
+    print("=====================Subprocess Executed========================") 
+  
+    fl_result = os.popen(f"{CURRENT_PATH}/projects/{project}{bug}/run_gzoltar_fl.sh --instrumentation online --failtests "+fail_tests+" --sourcefiles "+source_files).read()       
+    print("result :",fl_result)
+    print("=====================FL Results collected========================") 
     
     with open("./FL_execution.txt","w") as fl_file:
-        fl_file.write("./run_gzoltar_fl.sh --instrumentation online --failtests "+fail_tests+" --sourcefiles "+source_files)
+        fl_file.write(f"{CURRENT_PATH}/run_gzoltar_fl.sh --instrumentation online --failtests "+fail_tests+" --sourcefiles "+source_files)
+        print("=====================Execution process completed========================") 
+   
     with open("./FL_result.txt","w") as fl_result_file:
         fl_result_file.write(fl_result)
+
+    print("=====================Results are write and save========================") 
         
     
     
