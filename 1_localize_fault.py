@@ -40,7 +40,7 @@ if __name__ == '__main__':
             if t not in fail_tests:
                 fail_tests+=t+"#*:" 
     fail_tests = fail_tests[:len(fail_tests)-1]
-    
+    print("fail_tests:"+fail_tests)
     
     source_files = ""
     sources=sources.split(" - ")
@@ -50,6 +50,7 @@ if __name__ == '__main__':
         if s not in source_files:
             source_files+=s+":" 
     source_files = source_files[:len(source_files)-1]
+    print("source_files:"+source_files)
     
     #copy run.sh to the target project
     if "Closure" in project:
