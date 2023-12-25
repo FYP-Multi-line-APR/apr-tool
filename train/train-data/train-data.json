@@ -1,0 +1,338 @@
+[
+  {
+    "id": 1,
+    "bug": "throw new java.lang.ArithmeticException(\"Cannot divide by zero\");",
+    "fix": "if ( num2 == 0 ) { throw new ArithmeticException (\" \") ; }",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static double divide(double num1, double num2) { <BUG> throw new java.lang.ArithmeticException(\"Cannot divide by zero\"); </BUG>  throw new ArithmeticException(\"Cannot divide by zero\"); } return num1 / num2; } "
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "bug": "",
+    "fix": "if ( num2 == 0 ) { throw new ArithmeticException (\" \") ; }",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static double divide(double num1, double num2) { <BUG>  </BUG>  throw new ArithmeticException(\"Cannot divide by zero\"); } return num1 / num2; } "
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "bug": "if ( num2 == 0)  {     throw new ArithmeticException( \"Cannot divide by zero\") ; }",
+    "fix": "[Delete]",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static double divide(double num1, double num2) { if (num2 == 0) { <BUG> if ( num2 == 0)  {     throw new ArithmeticException( \"Cannot divide by zero\") ; } </BUG>  } return num1 / num2; } "
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "bug": "float operand1 = 10;",
+    "fix": "double operand1 = 10;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     <BUG> float operand1 = 10; </BUG>  double operand2 = 5;  System.out.println(\"Addition: \" + add(operand1, operand2)); System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "bug": "double operand2 = 5;double operand1 = 10;",
+    "fix": "double operand1 = 10;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     <BUG> double operand2 = 5;double operand1 = 10; </BUG>  double operand2 = 5;  System.out.println(\"Addition: \" + add(operand1, operand2)); System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 6,
+    "bug": "int operand2 = 5;",
+    "fix": "double operand2 = 5;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; <BUG> int operand2 = 5; </BUG>   System.out.println(\"Addition: \" + add(operand1, operand2)); System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 7,
+    "bug": "double operand1 = 10;double operand2 = 5;",
+    "fix": "double operand2 = 5;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; <BUG> double operand1 = 10;double operand2 = 5; </BUG>   System.out.println(\"Addition: \" + add(operand1, operand2)); System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 8,
+    "bug": "",
+    "fix": "System.out.println ( \"Addition: \" + add ( operand1, operand2 ) ) ; System.out.println ( \"Subtraction: \" + subtract ( operand1, operand2 ) ) ;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; double operand2 = 5;  <BUG>  </BUG>  System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 9,
+    "bug": "System.out.println( \"Division: \" + divide( operand1, operand2) ) ;System.out.println( \"Addition: \" + add( operand1, operand2) ) ;",
+    "fix": "System.out.println ( \"Addition: \" + add ( operand1, operand2 ) ) ;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; double operand2 = 5;  <BUG> System.out.println( \"Division: \" + divide( operand1, operand2) ) ;System.out.println( \"Addition: \" + add( operand1, operand2) ) ; </BUG>  System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 10,
+    "bug": "System.out.println( \"Subtraction: \" + subtract( operand1, operand2) ) ;System.out.println( \"Addition: \" + add( operand1, operand2) ) ;",
+    "fix": "System.out.println ( \"Addition: \" + add ( operand1, operand2 ) ) ;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; double operand2 = 5;  <BUG> System.out.println( \"Subtraction: \" + subtract( operand1, operand2) ) ;System.out.println( \"Addition: \" + add( operand1, operand2) ) ; </BUG>  System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 11,
+    "bug": "System.out.println( \"Multiplication: \" + multiply( operand1, operand2) ) ;System.out.println( \"Addition: \" + add( operand1, operand2) ) ;",
+    "fix": "System.out.println ( \"Addition: \" + add ( operand1, operand2 ) ) ;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; double operand2 = 5;  <BUG> System.out.println( \"Multiplication: \" + multiply( operand1, operand2) ) ;System.out.println( \"Addition: \" + add( operand1, operand2) ) ; </BUG>  System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 12,
+    "bug": "",
+    "fix": "System.out.println ( \"Subtraction: \" + subtract ( operand1, operand2 ) ) ;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; double operand2 = 5;  System.out.println(\"Addition: \" + add(operand1, operand2)); <BUG>  </BUG>  System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 13,
+    "bug": "System.out.println( \"Division: \" + divide( operand1, operand2) ) ;System.out.println( \"Subtraction: \" + subtract( operand1, operand2) ) ;",
+    "fix": "System.out.println ( \"Subtraction: \" + subtract ( operand1, operand2 ) ) ;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; double operand2 = 5;  System.out.println(\"Addition: \" + add(operand1, operand2)); <BUG> System.out.println( \"Division: \" + divide( operand1, operand2) ) ;System.out.println( \"Subtraction: \" + subtract( operand1, operand2) ) ; </BUG>  System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 14,
+    "bug": "System.out.println( \"Addition: \" + add( operand1, operand2) ) ;System.out.println( \"Subtraction: \" + subtract( operand1, operand2) ) ;",
+    "fix": "System.out.println ( \"Subtraction: \" + subtract ( operand1, operand2 ) ) ;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; double operand2 = 5;  System.out.println(\"Addition: \" + add(operand1, operand2)); <BUG> System.out.println( \"Addition: \" + add( operand1, operand2) ) ;System.out.println( \"Subtraction: \" + subtract( operand1, operand2) ) ; </BUG>  System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 15,
+    "bug": "System.out.println( \"Multiplication: \" + multiply( operand1, operand2) ) ;System.out.println( \"Subtraction: \" + subtract( operand1, operand2) ) ;",
+    "fix": "System.out.println ( \"Subtraction: \" + subtract ( operand1, operand2 ) ) ;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; double operand2 = 5;  System.out.println(\"Addition: \" + add(operand1, operand2)); <BUG> System.out.println( \"Multiplication: \" + multiply( operand1, operand2) ) ;System.out.println( \"Subtraction: \" + subtract( operand1, operand2) ) ; </BUG>  System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 16,
+    "bug": "",
+    "fix": "System.out.println ( \"Subtraction: \" + subtract ( operand1, operand2 ) ) ; System.out.println ( \"Multiplication: \" + multiply ( operand1, operand2 ) ) ;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; double operand2 = 5;  System.out.println(\"Addition: \" + add(operand1, operand2)); <BUG>  </BUG>  System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 17,
+    "bug": "",
+    "fix": "System.out.println ( \"Multiplication: \" + multiply ( operand1, operand2 ) ) ;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; double operand2 = 5;  System.out.println(\"Addition: \" + add(operand1, operand2)); System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); <BUG>  </BUG>   try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 18,
+    "bug": "System.out.println( \"Division: \" + divide( operand1, operand2) ) ;System.out.println( \"Multiplication: \" + multiply( operand1, operand2) ) ;",
+    "fix": "System.out.println ( \"Multiplication: \" + multiply ( operand1, operand2 ) ) ;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; double operand2 = 5;  System.out.println(\"Addition: \" + add(operand1, operand2)); System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); <BUG> System.out.println( \"Division: \" + divide( operand1, operand2) ) ;System.out.println( \"Multiplication: \" + multiply( operand1, operand2) ) ; </BUG>   try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 19,
+    "bug": "System.out.println( \"Addition: \" + add( operand1, operand2) ) ;System.out.println( \"Multiplication: \" + multiply( operand1, operand2) ) ;",
+    "fix": "System.out.println ( \"Multiplication: \" + multiply ( operand1, operand2 ) ) ;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; double operand2 = 5;  System.out.println(\"Addition: \" + add(operand1, operand2)); System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); <BUG> System.out.println( \"Addition: \" + add( operand1, operand2) ) ;System.out.println( \"Multiplication: \" + multiply( operand1, operand2) ) ; </BUG>   try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 20,
+    "bug": "System.out.println( \"Subtraction: \" + subtract( operand1, operand2) ) ;System.out.println( \"Multiplication: \" + multiply( operand1, operand2) ) ;",
+    "fix": "System.out.println ( \"Multiplication: \" + multiply ( operand1, operand2 ) ) ;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; double operand2 = 5;  System.out.println(\"Addition: \" + add(operand1, operand2)); System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); <BUG> System.out.println( \"Subtraction: \" + subtract( operand1, operand2) ) ;System.out.println( \"Multiplication: \" + multiply( operand1, operand2) ) ; </BUG>   try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 21,
+    "bug": "",
+    "fix": "System.out.println ( \"Division: \" + divide ( operand1, operand2 ) ) ;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; double operand2 = 5;  System.out.println(\"Addition: \" + add(operand1, operand2)); System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { <BUG>  </BUG>  } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 22,
+    "bug": "System.out.println( \"Addition: \" + add( operand1, operand2) ) ;System.out.println( \"Division: \" + divide( operand1, operand2) ) ;",
+    "fix": "System.out.println ( \"Division: \" + divide ( operand1, operand2 ) ) ;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; double operand2 = 5;  System.out.println(\"Addition: \" + add(operand1, operand2)); System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { <BUG> System.out.println( \"Addition: \" + add( operand1, operand2) ) ;System.out.println( \"Division: \" + divide( operand1, operand2) ) ; </BUG>  } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 23,
+    "bug": "System.out.println( \"Subtraction: \" + subtract( operand1, operand2) ) ;System.out.println( \"Division: \" + divide( operand1, operand2) ) ;",
+    "fix": "System.out.println ( \"Division: \" + divide ( operand1, operand2 ) ) ;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; double operand2 = 5;  System.out.println(\"Addition: \" + add(operand1, operand2)); System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { <BUG> System.out.println( \"Subtraction: \" + subtract( operand1, operand2) ) ;System.out.println( \"Division: \" + divide( operand1, operand2) ) ; </BUG>  } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 24,
+    "bug": "System.out.println( \"Multiplication: \" + multiply( operand1, operand2) ) ;System.out.println( \"Division: \" + divide( operand1, operand2) ) ;",
+    "fix": "System.out.println ( \"Division: \" + divide ( operand1, operand2 ) ) ;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; double operand2 = 5;  System.out.println(\"Addition: \" + add(operand1, operand2)); System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { <BUG> System.out.println( \"Multiplication: \" + multiply( operand1, operand2) ) ;System.out.println( \"Division: \" + divide( operand1, operand2) ) ; </BUG>  } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 25,
+    "bug": "",
+    "fix": "System.out.println ( e.getMessage ( ) ) ;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; double operand2 = 5;  System.out.println(\"Addition: \" + add(operand1, operand2)); System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { <BUG>  </BUG>  } } "
+      }
+    ]
+  },
+  {
+    "id": 26,
+    "bug": "",
+    "fix": "System.out.println ( \"Addition: \" + add ( operand1, operand2 ) ) ;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; double operand2 = 5;  <BUG>  </BUG>  System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 27,
+    "bug": "int operand1 = 10;",
+    "fix": "double operand1 = 10;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     <BUG> int operand1 = 10; </BUG>  double operand2 = 5;  System.out.println(\"Addition: \" + add(operand1, operand2)); System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  },
+  {
+    "id": 28,
+    "bug": "float operand2 = 5;",
+    "fix": "double operand2 = 5;",
+    "fixes": [],
+    "err": "",
+    "ctxs": [
+      {
+        "txt": "public static void main(String[] args) {     double operand1 = 10; <BUG> float operand2 = 5; </BUG>   System.out.println(\"Addition: \" + add(operand1, operand2)); System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+      }
+    ]
+  }
+]

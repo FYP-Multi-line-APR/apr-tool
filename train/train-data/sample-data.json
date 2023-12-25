@@ -1,0 +1,15 @@
+[
+    {
+      "id": 1,
+      "bug": "float operand1 = 10;",
+      "fix": "double operand1 = 10;",
+      "fixes": [],
+      "err": "",
+      "ctxs": [
+        {
+          "txt": "public static void main(String[] args) {   <BUG> float operand1 = 10; </BUG>  double operand2 = 5;  System.out.println(\"Addition: \" + add(operand1, operand2)); System.out.println(\"Subtraction: \" + subtract(operand1, operand2)); System.out.println(\"Multiplication: \" + multiply(operand1, operand2));  try { System.out.println(\"Division: \" + divide(operand1, operand2)); } catch (ArithmeticException e) { System.out.println(e.getMessage()); } } "
+        }
+      ]
+    }
+]
+

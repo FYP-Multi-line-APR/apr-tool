@@ -1,0 +1,17 @@
+SelfAPR
+P1 - 1 line 
+P2 - 1 line
+P3 - 1 line 
+P4 - 
+P5 - 1 line 
+P6 - 
+P7 - 1 line 
+P8 - 1 line 
+P9 - 
+P10 - 2 line
+P11 - transplant 2 lines instead of 1
+P12 - 
+P13 - 
+P14 - 
+P15 - 
+P16 - 
