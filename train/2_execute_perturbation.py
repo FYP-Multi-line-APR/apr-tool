@@ -81,16 +81,21 @@ def traveProject(bugId,projectPath,repodir):
     with open(repodir+trainDataJsonFilepath, 'w') as trainDataJsonFile:
         json.dump(outputData, trainDataJsonFile, indent=2)
 
-    # generateTwoMultiLineBugs()
-    # with open(repodir+'/train-data-2-lines.json', 'w') as trainDataJsonFile:
-    #     json.dump(outputDataTwoMultiLines, trainDataJsonFile, indent=2)
+    generateTwoMultiLineBugs()
+    with open(repodir+trainDataTwoMultiLinesJsonFilepath, 'w') as trainDataJsonFile:
+        json.dump(outputDataTwoMultiLines, trainDataJsonFile, indent=2)
     
 
 
     
 def generateTwoMultiLineBugs():
     lengthTwoPermutations = permutations(outputData, 2)
+    
+    maxPermutationsCountConsider = 10000
+    i = 0
     for lengthTwoPermutation in lengthTwoPermutations:
+        if (i > maxPermutationsCountConsider):
+            break
         bug1 = lengthTwoPermutation[0]
         bug2 = lengthTwoPermutation[1]
         newBug = copy.deepcopy(bug1)
@@ -108,7 +113,7 @@ def generateTwoMultiLineBugs():
             newBug["ctx-lines"].append(bug2["ctx-lines"][0])
             outputDataTwoMultiLines.append(newBug)
 
-
+        i += 1
 
 def generateContextWithPatch(bugInfoInJson):
     print("======generateContextWithPatch====")
@@ -494,7 +499,7 @@ def getFailingTestSourceCode(failingtest,program_path):
 
 if __name__ == '__main__':
     # bugIds = ['Lang-65','Chart-26','Math-106','Mockito-38','Time-26','Closure-134','Cli-1','Collections-25','Codec-1','Compress-1','Csv-1','Gson-1','JacksonCore-1','JacksonDatabind-1','JacksonXml-1','Jsoup-1','JxPath-1'] 
-    rootdir= '/home/chathuranga/Work/perturbation'
+    rootdir= './'
     repodir = rootdir+'/PerturbedSamples'
     
     for bugId in bugIds:

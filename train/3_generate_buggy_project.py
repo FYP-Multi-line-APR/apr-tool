@@ -1,8 +1,9 @@
+import os
 import json
 from utils import copyContents, findFilesInDirWithExt, replaceLine
 
-projectSrcDir = './PerturbedSamples/Cli-1/'
-projectCompileDir = "./PerturbedSamples/PerturbedJsons/perform-compilation"
+projectSrcDir = './PerturbedSamples/Csv-1/'
+projectCompileDir = "./PerturbedSamples/perform-compilation"
 intermediateTrainDataDir = "./PerturbedSamples/PerturbedJsons"
 jsonExt = "json"
 
@@ -16,9 +17,15 @@ def handleBugContentElement(bugContentElement):
 if __name__ == "__main__":
     copyContents(projectSrcDir, projectCompileDir)
     intermediateTrainDataJsonFiles = findFilesInDirWithExt(intermediateTrainDataDir, jsonExt)
+    print(os.getcwd())
     for intermediateTrainDataJsonFilePath in intermediateTrainDataJsonFiles: 
-        with open(intermediateTrainDataJsonFilePath, "r") as intermediateTrainDataJsonFile:
-            fileContent = json.load(intermediateTrainDataJsonFilePath)
+        print(intermediateTrainDataJsonFilePath)
+        try:
+            with open(intermediateTrainDataJsonFilePath, "r") as intermediateTrainDataJsonFile:
+                fileContent = json.load(intermediateTrainDataJsonFile)
+        except FileNotFoundError:
+            print(f"Error: File not found - {intermediateTrainDataJsonFilePath}")
+        
         for bugContentElement in fileContent:
             handleBugContentElement(bugContentElement)
             # compile directory
