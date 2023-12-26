@@ -17,7 +17,6 @@ outputData = []
 outputDataTwoMultiLines = []
 
 projectDir = "/Csv-1"
-compilationDir = "/perform-compilation/"
 
 id = 0
 def getNextTrainDataId():
@@ -217,26 +216,8 @@ def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, f
     ctxs = getListOfDictsForContexts([cxt])
     # ctxs = contextDict
     
-    
-    # replace bugline
-    fileToUpdate = repodir + compilationDir + targetfile.split("/")[-1]
-    replaceLine(fileToUpdate, bugLine, bug)
-    print(f"bugLine: {bugLine}")
-    print(f"bug: {bug}")
-
-    # compile and check test fail count 
-
-
     data = generateDataDict(id, bugLine, bug, fix, fixes, err, ctxBugLines, ctxs, filepathFromCheckoutDir, action)
     outputData.append(data)
-
-    # with open(repodir+'/train-'+bugId+'.csv','a')  as csvfile:
-    #     filewriter = csv.writer(csvfile, delimiter='\t',  escapechar=' ', 
-    #                             quoting=csv.QUOTE_NONE)               
-    #     filewriter.writerow([groundTruth,sample])
-
-
-
 
 def diagnostic(bugId,line,targetfile,repodir,action,executeFlag,rootdir):
     project = bugId.split('-')[0]
@@ -498,15 +479,11 @@ def getFailingTestSourceCode(failingtest,program_path):
 if __name__ == '__main__':
     # bugIds = ['Lang-65','Chart-26','Math-106','Mockito-38','Time-26','Closure-134','Cli-1','Collections-25','Codec-1','Compress-1','Csv-1','Gson-1','JacksonCore-1','JacksonDatabind-1','JacksonXml-1','Jsoup-1','JxPath-1'] 
     rootdir= './'
-    repodir = rootdir+'/PerturbedSamples'
+    repodir = rootdir+'PerturbedSamples'
     
     for bugId in bugIds:
         project=bugId.split('-')[0]
         bugNo = bugId.split('-')[1]
-
-        # if os.path.exists(repodir+'/'+bugId):
-        #     os.system('rm -rf '+repodir+'/'+bugId)
-        # os.system('defects4j checkout -p '+ str(project)+' -v '+str(bugNo)+'f   -w '+repodir+'/'+bugId)
 
         bugId = bugId.replace(project, "Perturbation-"+project)
         start(bugId,repodir,rootdir)
