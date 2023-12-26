@@ -10,8 +10,6 @@ from utils import replaceLine
 bugIds = ['Csv-1']
 checkoutProjectTo = 'Perturbation-Csv-1'
 
-os.environ['PATH'] = os.environ['PATH'] + ":/home/chathuranga/Work/defects4j/framework/bin/"
-
 trainDataJsonFilepath = "/PerturbedJsons/train-data.json"
 trainDataTwoMultiLinesJsonFilepath = "/PerturbedJsons/train-data-two-multi-lines.json"
 
