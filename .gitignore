@@ -1,2 +1,7 @@
 projects
 defects4j
+__pycache__
+PerturbedSamples/Csv-1/*
+train/PerturbedSamples/Perturbation-Csv-1/*
+train/PerturbedSamples/PerturbedJsons/*
+train/PerturbedSamples/perform-compilation/*
