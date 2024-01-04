@@ -88,7 +88,7 @@ def traveProject(bugId,projectPath,repodir):
 def generateTwoMultiLineBugs():
     lengthTwoPermutations = permutations(outputData, 2)
     
-    maxPermutationsCountConsider = 10000
+    maxPermutationsCountConsider = 100
     i = 0
     for lengthTwoPermutation in lengthTwoPermutations:
         if (i > maxPermutationsCountConsider):
