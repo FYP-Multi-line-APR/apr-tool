@@ -151,6 +151,9 @@ def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, f
     print(f"repodir: {repodir}")
     project = bugId.split('-')[0]
     print(line)
+
+    contextWidth = 5
+
     sample=''
     cxt=''
     filename = targetfile.split('/')[-1]
@@ -195,8 +198,8 @@ def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, f
     print("===context lines===")
     # contextDict = {}
     
-    startContextLineNo = int(cxtStart)-2 
-    endContextLineNo = int(cxtEnd)
+    startContextLineNo = int(cxtStart)-2-contextWidth
+    endContextLineNo = int(cxtEnd)+contextWidth
 
     buggyLineNos = [lineNo1, lineNo2, lineNo3, lineNo4, lineNo5]
 
@@ -204,7 +207,7 @@ def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, f
         with open(originFile,'r') as perturbFile:
             lines = perturbFile.readlines()
             for i in range(0,len(lines)):
-                if i > int(cxtStart)-2 and i < int(cxtEnd):
+                if i > startContextLineNo and i < endContextLineNo:
                     l = lines[i]
                     l = l.strip()
                     #remove comments
