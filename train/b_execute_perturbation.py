@@ -88,7 +88,7 @@ def traveProject(bugId,projectPath,repodir):
 def generateTwoMultiLineBugs():
     lengthTwoPermutations = permutations(outputData, 2)
     
-    maxPermutationsCountConsider = 10000
+    maxPermutationsCountConsider = 100
     i = 0
     for lengthTwoPermutation in lengthTwoPermutations:
         if (i > maxPermutationsCountConsider):
@@ -128,11 +128,32 @@ def generateContextWithPatch(bugInfoInJson):
     fixed_text = fixed_text.replace('<BUG>', '').replace('</BUG>', '')
     return fixed_text
 
+def generateBuggyLineContext(line, lineIdx, buggyLineNos, corruptCode):
+    buggyLineNo1 = buggyLineNos[0]
+    buggyLineNo2 = buggyLineNos[1]
+    buggyLineNo3 = buggyLineNos[2]
+    buggyLineNo4 = buggyLineNos[3]
+    buggyLineNo5 = buggyLineNos[4]
+    if lineIdx == int(buggyLineNo1)-1:
+        line ='<BUG> '+corruptCode + ' </BUG> '
+    elif buggyLineNo2.isdigit() and lineIdx == int(buggyLineNo2)-1:
+        line =''
+    elif buggyLineNo3.isdigit() and lineIdx == int(buggyLineNo3)-1:
+        line =''
+    elif buggyLineNo4.isdigit() and lineIdx == int(buggyLineNo4)-1:
+        line =''
+    elif buggyLineNo5.isdigit() and lineIdx == int(buggyLineNo5)-1:
+        line =''
+    return line
+
 def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, filepathFromCheckoutDir):
     print(f"targetfile: {targetfile}")
     print(f"repodir: {repodir}")
     project = bugId.split('-')[0]
     print(line)
+
+    contextWidth = 5
+
     sample=''
     cxt=''
     filename = targetfile.split('/')[-1]
@@ -177,23 +198,23 @@ def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, f
     print("===context lines===")
     # contextDict = {}
     
-    startContextLineNo = int(cxtStart)-2 
-    endContextLineNo = int(cxtEnd)
+    startContextLineNo = int(cxtStart)-2-contextWidth
+    endContextLineNo = int(cxtEnd)+contextWidth
+
+    buggyLineNos = [lineNo1, lineNo2, lineNo3, lineNo4, lineNo5]
 
     if cxtStart not in '' and cxtEnd not in '':
         with open(originFile,'r') as perturbFile:
             lines = perturbFile.readlines()
             for i in range(0,len(lines)):
-                if i > int(cxtStart)-2 and i < int(cxtEnd):
-
+                if i > startContextLineNo and i < endContextLineNo:
                     l = lines[i]
                     l = l.strip()
                     #remove comments
                     if  l.startswith('/') or l.startswith('*'):
                         l = ' '
                     l = l.replace('  ','').replace('\r','').replace('\n','')
-                    if i == int(lineNo1)-1:
-                        l='<BUG> '+curruptCode + ' </BUG> '
+                    l = generateBuggyLineContext(l, i, buggyLineNos, curruptCode)
                     cxt+=l+' '
 
 
