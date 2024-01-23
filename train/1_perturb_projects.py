@@ -31,8 +31,8 @@ def traveProject(projectPath):
 if __name__ == '__main__':
    
     # bugIds = ['Lang-65','Chart-26','Math-106','Mockito-38','Time-26','Closure-134','Cli-1','Collections-25','Codec-1','Compress-1','Csv-1','Gson-1','JacksonCore-1','JacksonDatabind-1','JacksonXml-1','Jsoup-1','JxPath-1']
-    # bugIds = ['Cli-1']
-    bugIds = ['Csv-1']
+    bugIds = ['Cli-1']
+    # bugIds = ['Csv-1']
     rootdir= './'
     repodir = rootdir+'PerturbedSamples'
     if not os.path.exists(repodir):
