@@ -1,14 +1,18 @@
 #!/usr/bin/python
-import sys, os, time, subprocess,fnmatch, shutil, csv,re, datetime, json
+import sys, os, time, subprocess,fnmatch, shutil, csv,re, datetime, json, re
 from itertools import permutations
 import copy
 from utils import replaceLine
+from collect_context import get_function_content_with_prediction_token_without_comments
+from collect_context import collect_context
 
-# bugIds = ['Cli-1']
-# checkoutProjectTo = 'Perturbation-Cli-1'
+bugIds = ['Cli-1']
+checkoutProjectTo = 'Perturbation-Cli-1'
+projectDir = "/Cli-1"
 
-bugIds = ['Csv-1']
-checkoutProjectTo = 'Perturbation-Csv-1'
+# bugIds = ['Csv-1']
+# checkoutProjectTo = 'Perturbation-Csv-1'
+# projectDir = "/Csv-1"
 
 trainDataJsonFilepath = "/PerturbedJsons/train-data.json"
 trainDataTwoMultiLinesJsonFilepath = "/PerturbedJsons/train-data-two-multi-lines.json"
@@ -16,7 +20,6 @@ trainDataTwoMultiLinesJsonFilepath = "/PerturbedJsons/train-data-two-multi-lines
 outputData = []
 outputDataTwoMultiLines = []
 
-projectDir = "/Csv-1"
 
 id = 0
 def getNextTrainDataId():
@@ -78,21 +81,24 @@ def traveProject(bugId,projectPath,repodir):
     with open(repodir+trainDataJsonFilepath, 'w') as trainDataJsonFile:
         json.dump(outputData, trainDataJsonFile, indent=2)
 
-    generateTwoMultiLineBugs()
-    with open(repodir+trainDataTwoMultiLinesJsonFilepath, 'w') as trainDataJsonFile:
-        json.dump(outputDataTwoMultiLines, trainDataJsonFile, indent=2)
+    # generateTwoMultiLineBugs()
+    # with open(repodir+trainDataTwoMultiLinesJsonFilepath, 'w') as trainDataJsonFile:
+    #     json.dump(outputDataTwoMultiLines, trainDataJsonFile, indent=2)
     
 
 
     
 def generateTwoMultiLineBugs():
     lengthTwoPermutations = permutations(outputData, 2)
-    
-    maxPermutationsCountConsider = 100
+    lengthTwoPermutationList = list(lengthTwoPermutations)
+
+    skip_rate = max(int(len(outputData)/5), 1)
+    # sys.exit(0)
+    maxPermutationsCountConsider = 1000
     i = 0
-    for lengthTwoPermutation in lengthTwoPermutations:
-        if (i > maxPermutationsCountConsider):
-            break
+    for i in range(0, len(lengthTwoPermutationList), skip_rate):
+        lengthTwoPermutation = lengthTwoPermutationList[i]
+
         bug1 = lengthTwoPermutation[0]
         bug2 = lengthTwoPermutation[1]
         newBug = copy.deepcopy(bug1)
@@ -146,13 +152,37 @@ def generateBuggyLineContext(line, lineIdx, buggyLineNos, corruptCode):
         line =''
     return line
 
+def processContextLines(contextLines):
+    result = []
+    for line in contextLines:
+        line = line.strip()
+        if line and not line.startswith("//") and not line.startswith("/*") and line != "":
+            line = re.sub(r'"([^"\\]*(\\.[^"\\]*)*)"', '""', line)
+            result.append(line)
+    return result
+
+def findBugLineRange(bugLineNos):
+    startLineNo = int(bugLineNos[0])
+    endLineNo = int(bugLineNos[0])
+    for bugLineNo in bugLineNos:
+        if bugLineNo.isdigit():
+            bugLineNoVal = int(bugLineNo)
+            if endLineNo < bugLineNoVal:
+                endLineNo = bugLineNoVal
+    return startLineNo, endLineNo
+
+def contextContainsStrings(context):
+    if "\"" in context:
+        return True
+    return False
+
 def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, filepathFromCheckoutDir):
     print(f"targetfile: {targetfile}")
     print(f"repodir: {repodir}")
     project = bugId.split('-')[0]
     print(line)
 
-    contextWidth = 5
+    contextWidth = 10
 
     sample=''
     cxt=''
@@ -181,6 +211,9 @@ def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, f
     groundTruth = groundTruth.replace('  ',' ').replace('\r','').replace('\n','')
     action = infos[0] 
 
+    if '\"' in groundTruth or '\"' in lineNo1 or '\"' in lineNo2 or '\"' in lineNo3 or '\"' in lineNo4 or '\"' in lineNo5:
+        return
+
     try:
         string_int = int(lineNo1)
     except ValueError:
@@ -203,20 +236,37 @@ def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, f
 
     buggyLineNos = [lineNo1, lineNo2, lineNo3, lineNo4, lineNo5]
 
-    if cxtStart not in '' and cxtEnd not in '':
-        with open(originFile,'r') as perturbFile:
-            lines = perturbFile.readlines()
-            for i in range(0,len(lines)):
-                if i > startContextLineNo and i < endContextLineNo:
-                    l = lines[i]
-                    l = l.strip()
-                    #remove comments
-                    if  l.startswith('/') or l.startswith('*'):
-                        l = ' '
-                    l = l.replace('  ','').replace('\r','').replace('\n','')
-                    l = generateBuggyLineContext(l, i, buggyLineNos, curruptCode)
-                    cxt+=l+' '
+    # cxtLines = []
+    # if cxtStart not in '' and cxtEnd not in '':
+    #     with open(originFile,'r') as perturbFile:
+    #         lines = perturbFile.readlines()
+    #         for i in range(0,len(lines)):
+    #             if i > startContextLineNo and i < endContextLineNo:
+    #                 l = lines[i]
+    #                 l = l.strip()
+    #                 #remove comments
+    #                 if  l.startswith('/') or l.startswith('*'):
+    #                     l = ' '
+    #                 l = l.replace('  ','').replace('\r','').replace('\n','')
+    #                 l = generateBuggyLineContext(l, i, buggyLineNos, curruptCode)
+    #                 if '\"' in l:
+    #                     return False
+    #                 cxt+=l+' '
+    #                 cxtLines.append(l)
 
+    # print(cxtLines)
+    # processedCtxLines = processContextLines(cxtLines)
+    # cxt = " ".join(processedCtxLines)
+
+    startBugLineNo, endBugLineNo = findBugLineRange(buggyLineNos)
+    # print(f"startBugLineNo:{startBugLineNo}, endBugLineNo:{endBugLineNo}")
+    originalFile = targetfile.replace("Perturbation-", "")
+
+    # cxt = get_function_content_with_prediction_token_without_comments(originalFile, startBugLineNo, endBugLineNo)
+    cxt = collect_context(originalFile, startBugLineNo, endBugLineNo)
+
+    if contextContainsStrings(cxt):
+        return False
 
     os.system("mv "+repodir+"/"+filename +"  "+originFile)
     sample+='[BUG] [BUGGY] ' + curruptCode + diagnosticMsg+ ' [CONTEXT] ' + cxt +' '+'  '
@@ -235,8 +285,6 @@ def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, f
     ctxBugLines = [(startContextLineNo, endContextLineNo)]
     
     ctxs = getListOfDictsForContexts([cxt])
-    # ctxs = contextDict
-    
     data = generateDataDict(id, bugLine, bug, fix, fixes, err, ctxBugLines, ctxs, filepathFromCheckoutDir, action)
     outputData.append(data)
 
