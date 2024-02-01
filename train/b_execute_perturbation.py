@@ -4,22 +4,31 @@ from itertools import permutations
 import copy
 from utils import replaceLine
 from collect_context import get_function_content_with_prediction_token_without_comments
-from collect_context import collect_context
+from collect_context import collect_context, get_context_with_prediction_token_without_comments
+from get_function_names_in_java_file import extract_class_name_for_file, extract_method_signatures_for_file
+from get_function_names_in_java_file import classname_field, method_signatures_field
 
-bugIds = ['Cli-1']
-checkoutProjectTo = 'Perturbation-Cli-1'
-projectDir = "/Cli-1"
+# bugIds = ['Cli-1']
+# checkoutProjectTo = 'Perturbation-Cli-1'
+# projectDir = "/Cli-1"
 
 # bugIds = ['Csv-1']
 # checkoutProjectTo = 'Perturbation-Csv-1'
 # projectDir = "/Csv-1"
 
+bugIds = []
+checkoutProjectTo = 'Perturbation-'
+projectDir = "/"
+
 trainDataJsonFilepath = "/PerturbedJsons/train-data.json"
+trainDataTxtFilePath = "./PerturbedSamples/PerturbedJsons/train-data.txt"
 trainDataTwoMultiLinesJsonFilepath = "/PerturbedJsons/train-data-two-multi-lines.json"
+codeFilesInfoFilePath = "/PerturbedJsons/code-files-info.json"
 
 outputData = []
 outputDataTwoMultiLines = []
 
+codeFileInfoDict = {}
 
 id = 0
 def getNextTrainDataId():
@@ -36,11 +45,12 @@ def getListOfDictsForContexts(contextList):
         })
     return output 
 
-def generateDataDict(id, bugLine, bug, fix, fixes, err, ctxBugLines, ctxs, filepathFromCheckoutDir, action):
+def generateDataDict(id, startBugLine, endBugLine, bug, fix, fixes, err, ctxBugLines, ctxs, filepathFromCheckoutDir, action):
     data = {
         "id": id, 
         "filepath": filepathFromCheckoutDir,
-        "bug-line": bugLine,
+        "start-bug-line": startBugLine,
+        "end-bug-line": endBugLine,
         "bug": bug,
         "fix": fix,
         "fixes": fixes,
@@ -80,14 +90,14 @@ def traveProject(bugId,projectPath,repodir):
 
     with open(repodir+trainDataJsonFilepath, 'w') as trainDataJsonFile:
         json.dump(outputData, trainDataJsonFile, indent=2)
+    
+    with open(repodir+codeFilesInfoFilePath, 'w') as codeFilesInfoFile: 
+        json.dump(codeFileInfoDict, codeFilesInfoFile, indent=2)
 
     # generateTwoMultiLineBugs()
     # with open(repodir+trainDataTwoMultiLinesJsonFilepath, 'w') as trainDataJsonFile:
     #     json.dump(outputDataTwoMultiLines, trainDataJsonFile, indent=2)
-    
-
-
-    
+   
 def generateTwoMultiLineBugs():
     lengthTwoPermutations = permutations(outputData, 2)
     lengthTwoPermutationList = list(lengthTwoPermutations)
@@ -176,9 +186,14 @@ def contextContainsStrings(context):
         return True
     return False
 
+def getMethodNamesOfFile(filepath):
+    pass
+
 def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, filepathFromCheckoutDir):
     print(f"targetfile: {targetfile}")
     print(f"repodir: {repodir}")
+    codeFilePath = targetfile.replace("Perturbation-","")
+    print(f"codeFilePath: {codeFilePath}")
     project = bugId.split('-')[0]
     print(line)
 
@@ -259,11 +274,11 @@ def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, f
     # cxt = " ".join(processedCtxLines)
 
     startBugLineNo, endBugLineNo = findBugLineRange(buggyLineNos)
-    # print(f"startBugLineNo:{startBugLineNo}, endBugLineNo:{endBugLineNo}")
     originalFile = targetfile.replace("Perturbation-", "")
 
     # cxt = get_function_content_with_prediction_token_without_comments(originalFile, startBugLineNo, endBugLineNo)
-    cxt = collect_context(originalFile, startBugLineNo, endBugLineNo)
+    # cxt = collect_context(originalFile, startBugLineNo, endBugLineNo, curruptCode)
+    cxt = get_context_with_prediction_token_without_comments(originalFile, startBugLineNo, endBugLineNo)
 
     if contextContainsStrings(cxt):
         return False
@@ -272,11 +287,12 @@ def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, f
     sample+='[BUG] [BUGGY] ' + curruptCode + diagnosticMsg+ ' [CONTEXT] ' + cxt +' '+'  '
     sample = sample.replace('\t',' ').replace('\n',' ').replace('\r',' ').replace('  ',' ')
     groundTruth = groundTruth.replace('\t',' ').replace('\n',' ').replace('\r',' ').replace('  ',' ')
+    curruptCode = curruptCode.replace('\t',' ').replace('\n',' ').replace('\r',' ').replace('  ',' ')
     
-    print("*****sample**** :"+sample)
+    # print("*****sample**** :"+sample)
 
     id = getNextTrainDataId()
-    print("lineNo: ", lineNo1)
+    # print("lineNo: ", lineNo1)
     bugLine = int(lineNo1)
     bug = curruptCode
     fix = groundTruth
@@ -285,8 +301,38 @@ def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, f
     ctxBugLines = [(startContextLineNo, endContextLineNo)]
     
     ctxs = getListOfDictsForContexts([cxt])
-    data = generateDataDict(id, bugLine, bug, fix, fixes, err, ctxBugLines, ctxs, filepathFromCheckoutDir, action)
+    data = generateDataDict(id, startBugLineNo, endBugLineNo, bug, fix, fixes, err, ctxBugLines, ctxs, filepathFromCheckoutDir, action)
     outputData.append(data)
+    addJavaFileInfoToGlobalDict(codeFilePath, filepathFromCheckoutDir)
+    append_to_file(trainDataTxtFilePath, str(data) + "\n")
+
+def addJavaFileInfoToGlobalDict(codeFilePath, filepathFromCheckoutDir):
+    global codeFileInfoDict
+    if codeFileInfoDict.get(codeFilePath) is None: 
+        className = extract_class_name_for_file(codeFilePath)
+        methodSignatures = extract_method_signatures_for_file(codeFilePath)
+        infoDict = generateJavaFileInfoDict(className, methodSignatures)
+        codeFileInfoDict[filepathFromCheckoutDir] = infoDict
+
+def generateJavaFileInfoDict(className, methodSignatures): 
+    return {
+        classname_field: className,
+        method_signatures_field: methodSignatures
+    }
+
+def append_to_file(file_path, content):
+    try:
+        file_exists = os.path.exists(file_path)
+        if not file_exists:
+            with open(file_path, 'w', encoding='utf-8') as file:
+                file.write(str(content))
+            print(f"File created at {file_path}")
+        else:
+            with open(file_path, 'a', encoding='utf-8') as file:
+                file.write(str(content))
+            print(f"Content appended to {file_path}")
+    except Exception as e:
+        print(f"Error: {e}")
 
 def diagnostic(bugId,line,targetfile,repodir,action,executeFlag,rootdir):
     project = bugId.split('-')[0]
@@ -385,8 +431,6 @@ def diagnostic(bugId,line,targetfile,repodir,action,executeFlag,rootdir):
         execute_result=''
     
     return execute_result
-
-
 
 
 def executePerturbation(bugId,repodir,originFile,action,line,rootdir):
@@ -547,6 +591,11 @@ def getFailingTestSourceCode(failingtest,program_path):
 
 if __name__ == '__main__':
     # bugIds = ['Lang-65','Chart-26','Math-106','Mockito-38','Time-26','Closure-134','Cli-1','Collections-25','Codec-1','Compress-1','Csv-1','Gson-1','JacksonCore-1','JacksonDatabind-1','JacksonXml-1','Jsoup-1','JxPath-1'] 
+    bug_name = sys.argv[1]
+    bugIds = [bug_name]
+    checkoutProjectTo = 'Perturbation-' + bug_name
+    projectDir = "/" + bug_name
+
     rootdir= './'
     repodir = rootdir+'PerturbedSamples'
     

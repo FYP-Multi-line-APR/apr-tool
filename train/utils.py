@@ -1,6 +1,15 @@
 import re 
 import os
 import shutil
+import json
+
+id_field = "id"
+filepath_field = "filepath"
+start_bug_line_field = "start-bug-line"
+prediction_token = "<extra_id_0>"
+fix_field = "fix"
+ctx_field = "ctxs"
+txt_field = "txt"
 
 def copyContents(source_directory, destination_directory):
     try:
@@ -13,6 +22,9 @@ def copyContents(source_directory, destination_directory):
         print(f"Error: {e}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
+
+def replace_placeholder(input_str, placeholder, replacement):
+    return input_str.replace(placeholder, replacement)
 
 def replaceLine(file_path, line_number, new_line):
     with open(file_path, 'r') as file:
@@ -50,6 +62,46 @@ def findFilesInDirWithExt(dirPath, ext):
     # Create full file paths
     filePaths = [os.path.join(dirPath, file) for file in filteredFiles]
     return filePaths
+
+def write_json(file_path, json_data):
+    with open(file_path, 'w') as json_file:
+        json.dump(json_data, json_file, indent=2)
+
+def write_to_file(file_path, text_to_write):
+    try:
+        with open(file_path, 'w') as file:
+            file.write(text_to_write)
+        print(f"Successfully wrote to {file_path}")
+    except IOError as e:
+        print(f"Error: {e}")
+
+def append_to_file(file_path, text_to_append):
+    try:
+        with open(file_path, 'a') as file:
+            file.write(text_to_append + '\n')
+        print(f"Appended '{text_to_append}' to {file_path}")
+    except IOError as e:
+        print(f"Error: {e}")
+
+def get_json_data(file_path):
+    with open(file_path, 'r') as json_file:
+        return json.load(json_file)
+
+def file_path_exists(file_path):
+    return os.path.exists(file_path)
+
+def get_list_of_dirs_in(current_dir):
+    directories = [dir_path for dir_path in os.listdir(current_dir) if os.path.isdir(os.path.join(current_dir, dir_path))]
+    return directories
+
+def get_files_inside_dir(dir_path):
+    return os.listdir(dir_path)
+
+def make_dir(dir_path):
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+    else:
+        print(f"already exist. dir: {dir_path}")
 
 
 if __name__ == "__main__":
