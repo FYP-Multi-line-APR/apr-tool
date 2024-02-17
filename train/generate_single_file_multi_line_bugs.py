@@ -46,18 +46,17 @@ def generate_multi_line_bugs(bug_file_and_ids_dict, bug_train_data_dict):
             if curr_bug[start_bug_line_field] not in lines_considered:
                 lines_considered.add(curr_bug[start_bug_line_field])
                 multi_line_bugs.append(curr_bug)
-        # for i in range(len(multi_line_bugs)):
-        i = 0
-        new_bug = copy.copy(multi_line_bugs[i])
-        for j in range(len(multi_line_bugs)):
-            if i!=j:
-                curr_bug_content = multi_line_bugs[j]
-                curr_ctx = curr_bug_content[ctx_field][0][txt_field]
-                curr_fix = curr_bug_content[fix_field]
-                fixed_context = get_fix_added_context(curr_ctx, curr_fix)
-                fixed_context_dict = get_ctx_dict(fixed_context)
-                new_bug[ctx_field].append(fixed_context_dict)
-        result.append(new_bug)
+        for i in range(len(multi_line_bugs)):
+            new_bug = copy.copy(multi_line_bugs[i])
+            for j in range(len(multi_line_bugs)):
+                if i!=j:
+                    curr_bug_content = multi_line_bugs[j]
+                    curr_ctx = curr_bug_content[ctx_field][0][txt_field]
+                    curr_fix = curr_bug_content[fix_field]
+                    fixed_context = get_fix_added_context(curr_ctx, curr_fix)
+                    fixed_context_dict = get_ctx_dict(fixed_context)
+                    new_bug[ctx_field].append(fixed_context_dict)
+            result.append(new_bug)
     return result
 
 def get_result_file_path(input_file_path):
