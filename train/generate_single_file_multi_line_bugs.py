@@ -2,6 +2,7 @@ import copy
 import json 
 import sys 
 from utils import get_json_data, replace_placeholder, write_json
+from itertools import permutations
 
 id_field = "id"
 filepath_field = "filepath"
@@ -36,6 +37,7 @@ def get_ctx_dict(ctx_text):
     return { txt_field: ctx_text }
 
 def generate_multi_line_bugs(bug_file_and_ids_dict, bug_train_data_dict):
+    global multiple_context_size, max_perms_consider
     result = []
     for bug_file in bug_file_and_ids_dict.keys():
         bug_file_ids = bug_file_and_ids_dict[bug_file]
@@ -47,22 +49,31 @@ def generate_multi_line_bugs(bug_file_and_ids_dict, bug_train_data_dict):
                 lines_considered.add(curr_bug[start_bug_line_field])
                 multi_line_bugs.append(curr_bug)
         for i in range(len(multi_line_bugs)):
-            new_bug = copy.copy(multi_line_bugs[i])
-            for j in range(len(multi_line_bugs)):
-                if i!=j:
-                    curr_bug_content = multi_line_bugs[j]
+            multi_line_indexes = [x for x in range(len(multi_line_bugs)) if x != i]
+            perms = list(permutations(multi_line_indexes, multiple_context_size))
+            perms = perms[:max_perms_consider]
+            print(perms)
+            for perm in perms:
+                new_bug = copy.deepcopy(multi_line_bugs[i])
+                print(f"new bug context length: {len(new_bug[ctx_field])}")
+                for context_index in perm:
+                    curr_bug_content = multi_line_bugs[context_index]
                     curr_ctx = curr_bug_content[ctx_field][0][txt_field]
                     curr_fix = curr_bug_content[fix_field]
                     fixed_context = get_fix_added_context(curr_ctx, curr_fix)
                     fixed_context_dict = get_ctx_dict(fixed_context)
                     new_bug[ctx_field].append(fixed_context_dict)
-            result.append(new_bug)
+                result.append(new_bug)
     return result
 
 def get_result_file_path(input_file_path):
+    global multiple_context_size
     file_name = input_file_path.split('.')[0]
-    file_name = file_name + "-multiple-contexts"
+    file_name = file_name + f"-multiple-contexts-{multiple_context_size}"
     return file_name + json_ext
+
+max_perms_consider = 4
+multiple_context_size = 2
 
 if __name__ == "__main__":
     # curr_train_data_file_path = "./PerturbedSamples/PerturbedJsons/set8-context-5-predict-token-for-fine-tune/train-data.json"

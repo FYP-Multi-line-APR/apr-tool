@@ -1,5 +1,8 @@
 #!/bin/bash
 python3 generate_single_file_multi_line_bugs.py \
+    PerturbedSamples/PerturbedJsons/set8-context-5-for-rhino/train-data-without-comments.json
+
+python3 generate_single_file_multi_line_bugs.py \
     PerturbedSamples/PerturbedJsons/set9-context-5-predict-token-for-fine-tune-finmath/train-data-without-comments.json
 
 python3 generate_single_file_multi_line_bugs.py \
