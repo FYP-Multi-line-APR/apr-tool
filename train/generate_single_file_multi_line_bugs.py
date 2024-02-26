@@ -49,20 +49,16 @@ def generate_multi_line_bugs(bug_file_and_ids_dict, bug_train_data_dict):
                 lines_considered.add(curr_bug[start_bug_line_field])
                 multi_line_bugs.append(curr_bug)
         for i in range(len(multi_line_bugs)):
-            multi_line_indexes = [x for x in range(len(multi_line_bugs)) if x != i]
-            perms = list(permutations(multi_line_indexes, multiple_context_size))
-            perms = perms[:max_perms_consider]
-            print(perms)
-            for perm in perms:
-                new_bug = copy.deepcopy(multi_line_bugs[i])
-                print(f"new bug context length: {len(new_bug[ctx_field])}")
-                for context_index in perm:
-                    curr_bug_content = multi_line_bugs[context_index]
-                    curr_ctx = curr_bug_content[ctx_field][0][txt_field]
-                    curr_fix = curr_bug_content[fix_field]
-                    fixed_context = get_fix_added_context(curr_ctx, curr_fix)
-                    fixed_context_dict = get_ctx_dict(fixed_context)
-                    new_bug[ctx_field].append(fixed_context_dict)
+            new_bug = copy.deepcopy(multi_line_bugs[i])
+            if i+multiple_context_size < len(multi_line_bugs):
+                for j in range(i+1, i+multiple_context_size):
+                    if i != j:
+                        curr_bug_content = multi_line_bugs[j]
+                        curr_ctx = curr_bug_content[ctx_field][0][txt_field]
+                        curr_fix = curr_bug_content[fix_field]
+                        fixed_context = get_fix_added_context(curr_ctx, curr_fix)
+                        fixed_context_dict = get_ctx_dict(fixed_context)
+                        new_bug[ctx_field].append(fixed_context_dict)
                 result.append(new_bug)
     return result
 
@@ -72,12 +68,12 @@ def get_result_file_path(input_file_path):
     file_name = file_name + f"-multiple-contexts-{multiple_context_size}"
     return file_name + json_ext
 
-max_perms_consider = 4
-multiple_context_size = 2
+multiple_context_size = None
 
 if __name__ == "__main__":
     # curr_train_data_file_path = "./PerturbedSamples/PerturbedJsons/set8-context-5-predict-token-for-fine-tune/train-data.json"
     curr_train_data_file_path = sys.argv[1]
+    multiple_context_size = int(sys.argv[2])
     result_file_path = get_result_file_path(curr_train_data_file_path)
     single_line_bug_train_data = get_json_data(curr_train_data_file_path)
 
