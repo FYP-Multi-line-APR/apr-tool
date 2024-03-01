@@ -1,2 +1,4 @@
 projects
 defects4j
+/train/cloned-repos/*
+/train/perturbed_repos/*
