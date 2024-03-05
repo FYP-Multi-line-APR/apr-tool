@@ -7,9 +7,22 @@ id_field = "id"
 filepath_field = "filepath"
 start_bug_line_field = "start-bug-line"
 prediction_token = "<extra_id_0>"
+bug_token = "[BUG]"
+context_token = "[CONTEXT]"
+bug_field = "bug"
 fix_field = "fix"
 ctx_field = "ctxs"
 txt_field = "txt"
+
+def print_dict(data):
+    print(json.dumps(data, indent=2))
+
+def get_unique_item_list(items):
+    result = []
+    for item in items:
+        if item not in result:
+            result.append(item)
+    return result
 
 def copyContents(source_directory, destination_directory):
     try:
@@ -22,6 +35,9 @@ def copyContents(source_directory, destination_directory):
         print(f"Error: {e}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
+
+def replace_prediction_token(input_str, replacement):
+    return input_str.replace(prediction_token, replacement)
 
 def replace_placeholder(input_str, placeholder, replacement):
     return input_str.replace(placeholder, replacement)

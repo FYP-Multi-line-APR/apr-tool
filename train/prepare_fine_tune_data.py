@@ -1,7 +1,7 @@
 import sys, os, json
 from utils import get_files_inside_dir, make_dir, get_list_of_dirs_in, get_json_data, write_json
 from utils import get_unique_item_list, replace_placeholder
-from utils import prediction_token
+from utils import prediction_token, txt_field
 
 train_data = "train-data"
 fine_tune_train_data = "fine-tune-train-data"
@@ -36,16 +36,28 @@ def get_method_names_str(filepath):
     unique_method_names = get_unique_item_list(method_names)
     return ' '.join(unique_method_names)
 
-def get_format_text(bug, context_text, filepath):
+def get_format_text(bug, context_text_with_prediction_token, filepath, curr_context_text=None):
     global prompt_version
     if prompt_version == 0:
-        return f"{bug_token} {bug} {context_token} {context_text}"
+        return f"{bug_token} {bug} {context_token} {context_text_with_prediction_token}"
     if prompt_version == 1:
         method_names_str = get_method_names_str(filepath)
-        return f"{bug_token} {bug} {context_token} {context_text} {method_token} {method_names_str}"
+        return f"{bug_token} {bug} {context_token} {context_text_with_prediction_token} {method_token} {method_names_str}"
     if prompt_version == 2:
-        context_with_bug = replace_placeholder(context_text, prediction_token, bug)
-        return f"{bug_token} {context_text} {context_token} {context_with_bug}"
+        context_with_bug = replace_placeholder(context_text_with_prediction_token, prediction_token, bug)
+        return f"{bug_token} {context_text_with_prediction_token} {context_token} {context_with_bug}"
+    if prompt_version == 3:
+        if prediction_token in curr_context_text:
+            context_with_bug = replace_placeholder(context_text_with_prediction_token, prediction_token, bug)
+            return f"{bug_token} {context_text_with_prediction_token} {context_token} {context_with_bug}"
+        else:
+            return f"{bug_token} {context_text_with_prediction_token} {context_token} {curr_context_text}"
+
+def get_bug_context_text(bug_content):
+    for context in bug_content["ctxs"]:
+        if prediction_token in context[txt_field]:
+            return context[txt_field]
+    return None
 
 def handle_bug_file(bug_file_path, result_file_path):
     bug_contents = get_json_data(bug_file_path)
@@ -53,9 +65,11 @@ def handle_bug_file(bug_file_path, result_file_path):
     for bug_content in bug_contents: 
         filepath = bug_content[filepath_field]
         bug = bug_content["bug"]
-        context_text = bug_content["ctxs"][0]["txt"]
-        format_text = get_format_text(bug, context_text, filepath)
-        bug_content["ctxs"][0]["txt"] = format_text
+        bug_context_with_prediction_token = get_bug_context_text(bug_content)
+        bug_context_with_bug = replace_placeholder(bug_context_with_prediction_token, prediction_token, bug)
+        for i in range(len(bug_content['ctxs'])):
+            curr_context = bug_content['ctxs'][i]
+            bug_content['ctxs'][i]['txt'] = get_format_text(bug, bug_context_with_prediction_token, filepath, curr_context[txt_field])
         result.append(bug_content)
     write_json(result_file_path, result)
 
@@ -86,9 +100,7 @@ if __name__ == "__main__":
         code_files_info_data = get_json_data(root_dir_path + code_files_info_json_filepath)
     except:
         pass
-    
     result_file_path = bug_file_path.replace(train_data, fine_tune_train_data)
-
     result_file_path = bug_file_path.replace(train_data, fine_tune_train_data)
     result_file_path = add_prompt_version_to_result_filename(result_file_path, prompt_version+1)
     handle_bug_file(bug_file_path, result_file_path)
