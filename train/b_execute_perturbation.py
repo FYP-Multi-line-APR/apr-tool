@@ -4,6 +4,7 @@ from itertools import permutations
 import copy
 from utils import replaceLine
 from collect_context import get_function_content_with_prediction_token_without_comments
+from collect_context import get_full_file_context_with_prediction_token_without_comments
 from collect_context import collect_context, get_context_with_prediction_token_without_comments
 from get_function_names_in_java_file import extract_class_name_for_file, extract_method_signatures_for_file
 from get_function_names_in_java_file import classname_field, method_signatures_field
@@ -45,7 +46,7 @@ def getListOfDictsForContexts(contextList):
         })
     return output 
 
-def generateDataDict(id, startBugLine, endBugLine, bug, fix, fixes, err, ctxBugLines, ctxs, filepathFromCheckoutDir, action):
+def generateDataDict(id, startBugLine, endBugLine, bug, fix, fixes, err, ctxs, filepathFromCheckoutDir, action):
     data = {
         "id": id, 
         "filepath": filepathFromCheckoutDir,
@@ -55,7 +56,6 @@ def generateDataDict(id, startBugLine, endBugLine, bug, fix, fixes, err, ctxBugL
         "fix": fix,
         "fixes": fixes,
         "err": err,
-        "ctx-lines": ctxBugLines,
         "ctxs": ctxs,
         "action": action
     }
@@ -63,30 +63,25 @@ def generateDataDict(id, startBugLine, endBugLine, bug, fix, fixes, err, ctxBugL
 
 def start(bugId,repodir,rootdir):
     projectPath=repodir+'/'+bugId
-    # move content in src dir to compilation dir
     traveProject(bugId, projectPath,repodir)
 
 def traveProject(bugId,projectPath,repodir):
-    print(projectPath)
+    # print(projectPath)
     listdirs = os.listdir(projectPath)
     for f in listdirs:
         pattern = '*.java'
         p = os.path.join(projectPath, f)
         if os.path.isfile(p):
-            # print(p)
             if fnmatch.fnmatch(f, pattern) and ('Test' not in p and 'test' not in p) :
-                print("===filepath===")
-                print(p)
                 filePathFromCheckout = p.split(checkoutProjectTo, 1)[1]
                 with open(p,'r') as perturbFile:
                     lines = perturbFile.readlines()
                     if len(lines)>0:
                         for k in range(0,len(lines)):
-                            constructTrainSample(bugId, lines[k], p, repodir, True, rootdir, filePathFromCheckout)
-                            # break
+                            # constructTrainSample(bugId, lines[k], p, repodir, True, rootdir, filePathFromCheckout)
+                            construct_large_train_sample(bugId, lines[k], p, repodir, True, rootdir, filePathFromCheckout)
         else:
             traveProject(bugId,p,repodir)
-        # break
 
     with open(repodir+trainDataJsonFilepath, 'w') as trainDataJsonFile:
         json.dump(outputData, trainDataJsonFile, indent=2)
@@ -103,8 +98,6 @@ def generateTwoMultiLineBugs():
     lengthTwoPermutationList = list(lengthTwoPermutations)
 
     skip_rate = max(int(len(outputData)/5), 1)
-    # sys.exit(0)
-    maxPermutationsCountConsider = 1000
     i = 0
     for i in range(0, len(lengthTwoPermutationList), skip_rate):
         lengthTwoPermutation = lengthTwoPermutationList[i]
@@ -129,8 +122,8 @@ def generateTwoMultiLineBugs():
         i += 1
 
 def generateContextWithPatch(bugInfoInJson):
-    print("======generateContextWithPatch====")
-    print(bugInfoInJson)
+    # print("======generateContextWithPatch====")
+    # print(bugInfoInJson)
     fix = bugInfoInJson["fix"]
     contexts = bugInfoInJson["ctxs"]
 
@@ -189,16 +182,8 @@ def contextContainsStrings(context):
 def getMethodNamesOfFile(filepath):
     pass
 
-def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, filepathFromCheckoutDir):
-    print(f"targetfile: {targetfile}")
-    print(f"repodir: {repodir}")
+def construct_large_train_sample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, filepathFromCheckoutDir):
     codeFilePath = targetfile.replace("Perturbation-","")
-    print(f"codeFilePath: {codeFilePath}")
-    project = bugId.split('-')[0]
-    print(line)
-
-    contextWidth = 10
-
     sample=''
     cxt=''
     filename = targetfile.split('/')[-1]
@@ -213,6 +198,65 @@ def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, f
         return
     curruptCode =  infos[1]
 
+    lineNo1 =  infos[2] 
+    lineNo2 =  infos[3] 
+    lineNo3 =  infos[4] 
+    lineNo4 =  infos[5]
+    lineNo5 =  infos[6]
+
+    groundTruth = infos[9]
+    groundTruth = groundTruth.replace('  ',' ').replace('\r','').replace('\n','')
+    action = infos[0] 
+
+    if '\"' in groundTruth or '\"' in lineNo1 or '\"' in lineNo2 or '\"' in lineNo3 or '\"' in lineNo4 or '\"' in lineNo5:
+        return
+
+    curruptCode = curruptCode.replace(' (','(').replace(' )',')')
+    curruptCode = curruptCode.replace('(  )','()')
+    curruptCode = curruptCode.replace(' .','.')
+    
+    groundTruth = groundTruth.replace('\t',' ').replace('\n',' ').replace('\r',' ').replace('  ',' ')
+    curruptCode = curruptCode.replace('\t',' ').replace('\n',' ').replace('\r',' ').replace('  ',' ')
+
+    buggyLineNos = [lineNo1, lineNo2, lineNo3, lineNo4, lineNo5]
+
+    startBugLineNo, endBugLineNo = findBugLineRange(buggyLineNos)
+    originalFile = targetfile.replace("Perturbation-", "")
+
+    all_file_cxts = get_full_file_context_with_prediction_token_without_comments(originalFile, startBugLineNo, endBugLineNo)
+
+    id = getNextTrainDataId()
+    
+    bugLine = int(lineNo1)
+    bug = curruptCode
+    fix = groundTruth
+    fixes = []
+    err = ''
+    
+    ctxs = getListOfDictsForContexts(all_file_cxts)
+    data = generateDataDict(id, startBugLineNo, endBugLineNo, bug, fix, fixes, err, ctxs, filepathFromCheckoutDir, action)
+    outputData.append(data)
+    addJavaFileInfoToGlobalDict(codeFilePath, filepathFromCheckoutDir)
+    append_to_file(trainDataTxtFilePath, str(data) + "\n")
+
+
+def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, filepathFromCheckoutDir):
+    codeFilePath = targetfile.replace("Perturbation-","")
+    project = bugId.split('-')[0]
+
+    sample=''
+    cxt=''
+    filename = targetfile.split('/')[-1]
+    originFile = targetfile.replace("Perturbation-","")
+
+    if not '^' in line:
+        return
+    infos = line.split('^')
+    if len(infos) < 11:
+        return
+    if len(infos) > 11:
+        return
+    curruptCode =  infos[1]
 
     lineNo1 =  infos[2] 
     lineNo2 =  infos[3] 
@@ -243,11 +287,11 @@ def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, f
 #     diagnosticMsg = diagnostic(bugId,line,targetfile,repodir,action,diagnosticFlag,rootdir)
     diagnosticMsg = ' '
     #get context info
-    print("===context lines===")
+    # print("===context lines===")
     # contextDict = {}
     
-    startContextLineNo = int(cxtStart)-2-contextWidth
-    endContextLineNo = int(cxtEnd)+contextWidth
+    # startContextLineNo = int(cxtStart)-2-contextWidth
+    # endContextLineNo = int(cxtEnd)+contextWidth
 
     buggyLineNos = [lineNo1, lineNo2, lineNo3, lineNo4, lineNo5]
 
@@ -269,7 +313,7 @@ def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, f
     #                 cxt+=l+' '
     #                 cxtLines.append(l)
 
-    # print(cxtLines)
+    # # print(cxtLines)
     # processedCtxLines = processContextLines(cxtLines)
     # cxt = " ".join(processedCtxLines)
 
@@ -279,7 +323,7 @@ def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, f
     # cxt = get_function_content_with_prediction_token_without_comments(originalFile, startBugLineNo, endBugLineNo)
     # cxt = collect_context(originalFile, startBugLineNo, endBugLineNo, curruptCode)
     cxt = get_context_with_prediction_token_without_comments(originalFile, startBugLineNo, endBugLineNo)
-
+    # all_file_cxts = get_full_file_context_with_prediction_token_without_comments(originalFile, startBugLineNo, endBugLineNo)
     if contextContainsStrings(cxt):
         return False
 
@@ -288,20 +332,19 @@ def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, f
     sample = sample.replace('\t',' ').replace('\n',' ').replace('\r',' ').replace('  ',' ')
     groundTruth = groundTruth.replace('\t',' ').replace('\n',' ').replace('\r',' ').replace('  ',' ')
     curruptCode = curruptCode.replace('\t',' ').replace('\n',' ').replace('\r',' ').replace('  ',' ')
-    
-    # print("*****sample**** :"+sample)
 
     id = getNextTrainDataId()
-    # print("lineNo: ", lineNo1)
+    # # print("lineNo: ", lineNo1)
     bugLine = int(lineNo1)
     bug = curruptCode
     fix = groundTruth
     fixes = []
     err = ''
-    ctxBugLines = [(startContextLineNo, endContextLineNo)]
+    # ctxBugLines = [(startContextLineNo, endContextLineNo)]
     
     ctxs = getListOfDictsForContexts([cxt])
-    data = generateDataDict(id, startBugLineNo, endBugLineNo, bug, fix, fixes, err, ctxBugLines, ctxs, filepathFromCheckoutDir, action)
+    data = generateDataDict(id, startBugLineNo, endBugLineNo, bug, fix, fixes, err, ctxs, filepathFromCheckoutDir, action)
+    print(f"data: {data}")
     outputData.append(data)
     addJavaFileInfoToGlobalDict(codeFilePath, filepathFromCheckoutDir)
     append_to_file(trainDataTxtFilePath, str(data) + "\n")
@@ -326,11 +369,11 @@ def append_to_file(file_path, content):
         if not file_exists:
             with open(file_path, 'w', encoding='utf-8') as file:
                 file.write(str(content))
-            print(f"File created at {file_path}")
+            # print(f"File created at {file_path}")
         else:
             with open(file_path, 'a', encoding='utf-8') as file:
                 file.write(str(content))
-            print(f"Content appended to {file_path}")
+            # print(f"Content appended to {file_path}")
     except Exception as e:
         print(f"Error: {e}")
 
@@ -339,8 +382,8 @@ def diagnostic(bugId,line,targetfile,repodir,action,executeFlag,rootdir):
     line=line.replace('\r',' ').replace('\n',' ')
     filename = targetfile.split('/')[-1]
     originFile = targetfile.replace("Perturbation-","")
-    print("*****originFile originFile**** :"+originFile)
-    print("*****diagnostics**** :")
+    # print("*****originFile originFile**** :"+originFile)
+    # print("*****diagnostics**** :")
 
 
     #copy the origin file outside the project
@@ -348,7 +391,7 @@ def diagnostic(bugId,line,targetfile,repodir,action,executeFlag,rootdir):
     # initial perturb string
     perturbStr=''
     
-    print("target line:"+line)
+    # print("target line:"+line)
     infos = line.split('^')
     curruptCode =  infos[1]  
     lineNo1 =  infos[2] 
@@ -357,7 +400,7 @@ def diagnostic(bugId,line,targetfile,repodir,action,executeFlag,rootdir):
     lineNo4 =  infos[5]
     lineNo5 =  infos[6]
 
-    print('**************Currupt Code*************'+curruptCode)
+    # print('**************Currupt Code*************'+curruptCode)
     
     
     if "Transplant" in action or "Replace" in action or "Move" in action or  "Insert" in action:
@@ -438,18 +481,18 @@ def executePerturbation(bugId,repodir,originFile,action,line,rootdir):
     compile_error_flag = True
 
     program_path=repodir+'/'+bugId
-    print('****************'+program_path+'******************')
+    # print('****************'+program_path+'******************')
     #get compile result
     cmd = "cd " + program_path + ";"
     cmd += "timeout 90 defects4j compile"
     exectresult='[TIMEOUT]'
     symbolVaraible=''
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-    print(result)
+    # print(result)
     # Running ant (compile.tests)
     if 'Running ant (compile)' in str(result):
         result = str(result).split("Running ant (compile)")[1]
-        print('===result==='+str(result))
+        # print('===result==='+str(result))
 
         result=result.split('\n')
         for i in range(0,len(result)):
@@ -458,7 +501,7 @@ def executePerturbation(bugId,repodir,originFile,action,line,rootdir):
                 exectresult=firstError.split('[javac]')[0]
                 if '\\' in exectresult:
                     exectresult=exectresult.split('\\')[0]
-                print('===FirstError==='+firstError)
+                # print('===FirstError==='+firstError)
                 # 'cannot  find  symbol      
                 if 'symbol' in firstError and 'cannot' in firstError and 'find' in firstError:       
                     if '[javac]' in firstError:
@@ -486,7 +529,7 @@ def executePerturbation(bugId,repodir,originFile,action,line,rootdir):
         cmd += "timeout 180 defects4j test"
         result=''
         result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        print(result)
+        # print(result)
         if 'Failing tests: 0' in str(result):
             exectresult='[NO-ERROR]'
         elif 'Failing tests' in str(result):
@@ -527,7 +570,6 @@ def getFailingTestDiagnostic(failingtest,program_path):
     cmd = "cd " + program_path + ";"
     cmd += "timeout 120 defects4j monitor.test -t "+failingtest
     result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-    print('====result===='+str(result))
     if 'failed!' in str(result) :
         result = str(result).split('failed!')[1]
         if testclass in str(result):
@@ -557,7 +599,6 @@ def getFailingTestSourceCode(failingtest,program_path):
     elif os.path.exists(program_path+'/gson/src/test/java'):
         program_path = program_path+'/gson/src/test/java/'
 
-    print(failingtest+'&&&&&&&&failingtest')
     testclass = failingtest.split("::")[0]
     testmethod = failingtest.split("::")[1]
     testclass=testclass.replace('.','/')
@@ -582,16 +623,14 @@ def getFailingTestSourceCode(failingtest,program_path):
                             code=l
     return code
 
-
-
-
-
-
-
-
 if __name__ == '__main__':
     # bugIds = ['Lang-65','Chart-26','Math-106','Mockito-38','Time-26','Closure-134','Cli-1','Collections-25','Codec-1','Compress-1','Csv-1','Gson-1','JacksonCore-1','JacksonDatabind-1','JacksonXml-1','Jsoup-1','JxPath-1'] 
     bug_name = sys.argv[1]
+
+    trainDataJsonFilepath = f"/PerturbedJsons/train-data-{bug_name}.json"
+    trainDataTxtFilePath = f"./PerturbedSamples/PerturbedJsons/train-data-{bug_name}.txt"
+    codeFilesInfoFilePath = f"/PerturbedJsons/code-files-info-{bug_name}.json"
+
     bugIds = [bug_name]
     checkoutProjectTo = 'Perturbation-' + bug_name
     projectDir = "/" + bug_name
