@@ -4,7 +4,56 @@ context_jar_path = "./../utils/context.jar "
 prediction_token = "<extra_id_0>"
 bug_token = "[BUG]"
 context_token = "[CONTEXT]"
-context_width = 11
+context_width = 10
+
+def divide_front_line_range_into_parts(lower_bound, upper_bound, width):
+    parts = []
+    end = upper_bound
+    while end > lower_bound:
+        start = max(end - width + 1, lower_bound)
+        parts.append((start, end))
+        end -= width
+    parts.reverse() 
+    return parts
+
+def divide_back_line_range_into_parts(lower_bound, upper_bound, width):
+    parts = []
+    start = lower_bound
+    while start < upper_bound:
+        end = min(start + width - 1, upper_bound)
+        parts.append((start, end))
+        start += width
+    return parts
+
+def extract_lines(lines, line_ranges):
+    extracted_lists = []
+    for start, end in line_ranges:
+        extracted_lists.append(lines[start-1:end])  # Adjust indices to 0-based indexing
+    return extracted_lists
+
+def filter_full_file_context(file_lines):
+    global context_width
+    file_start = 1
+    file_end = len(file_lines) - 1
+    predicting_line_index = -1 
+    for i in range(len(file_lines)):
+        line = file_lines[i]
+        if prediction_token in line:
+            predicting_line_index = i 
+            break 
+    estimate_start = predicting_line_index - context_width
+    estimate_end = predicting_line_index + context_width
+    start_index = max(0, estimate_start) 
+    end_index = min(len(file_lines) - 1, estimate_end)
+
+    # from 0 to start index divide into 2xcontext width 
+    front_line_ranges = divide_front_line_range_into_parts(file_start, start_index - 1, context_width * 2)
+    back_line_ranges = divide_back_line_range_into_parts(end_index, file_end, context_width * 2)
+    # from end index to file end divide into 2xcontext width 
+    extracted_front_lines_set = extract_lines(file_lines, front_line_ranges)
+    extracted_back_lines_set = extract_lines(file_lines, back_line_ranges)
+    buggy_lines_set = [file_lines[start_index:end_index + 1]]
+    return extracted_front_lines_set + buggy_lines_set + extracted_back_lines_set
 
 def extract_startline_no(text):
     match = re.search(r'startline:(\d+)', text)
