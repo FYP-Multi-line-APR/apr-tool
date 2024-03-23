@@ -167,8 +167,10 @@ def get_context_with_prediction_token_without_comments(file_path, start_bug_line
 def get_full_file_context_with_prediction_token_without_comments(file_path, start_bug_line, end_bug_line):
     file_lines = get_file_lines_with_prediction_token(file_path, start_bug_line, end_bug_line)
     file_lines_without_comment = remove_comment_lines(file_lines)
-    split_list = [get_content_lines_as_string(file_lines_without_comment[i:i+context_width]) for i in range(0, len(file_lines_without_comment), context_width)]
-    return split_list
+    filtered_content = filter_full_file_context(file_lines_without_comment)
+    return [get_content_lines_as_string(each_element) for each_element in filtered_content]
+    # split_list = [get_content_lines_as_string(file_lines_without_comment[i:i+context_width]) for i in range(0, len(file_lines_without_comment), context_width)]
+    # return split_list
 
 def remove_comment_lines(content_lines):
     content_without_comments = []

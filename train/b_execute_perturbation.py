@@ -2,7 +2,9 @@
 import sys, os, time, subprocess,fnmatch, shutil, csv,re, datetime, json, re
 from itertools import permutations
 import copy
-from utils import replaceLine
+from utils import replaceLine, read_file_lines, write_lines_to_file
+from utils import bug_field, start_bug_line_field, end_bug_line_field
+from utils import get_mvn_repo_final_test_result, run_keyword, failure_keyword, error_keyword, skipped_keyword
 from collect_context import get_function_content_with_prediction_token_without_comments
 from collect_context import get_full_file_context_with_prediction_token_without_comments
 from collect_context import collect_context, get_context_with_prediction_token_without_comments
@@ -19,6 +21,7 @@ from get_function_names_in_java_file import classname_field, method_signatures_f
 
 bugIds = []
 checkoutProjectTo = 'Perturbation-'
+replacable_perturbation_keyword = 'Perturbation-'
 projectDir = "/"
 
 trainDataJsonFilepath = "/PerturbedJsons/train-data.json"
@@ -63,10 +66,43 @@ def generateDataDict(id, startBugLine, endBugLine, bug, fix, fixes, err, ctxs, f
 
 def start(bugId,repodir,rootdir):
     projectPath=repodir+'/'+bugId
-    traveProject(bugId, projectPath,repodir)
+    code_project_path = projectPath.replace(replacable_perturbation_keyword, "")
+    traveProject(bugId, projectPath,repodir, code_project_path)
 
-def traveProject(bugId,projectPath,repodir):
-    # print(projectPath)
+def update_temp_code_file(code_file_path, data):
+    # print(f"apply bug\nfile:{code_file_path}\nbug line:{data.get(start_bug_line_field)}-{data.get(end_bug_line_field)}\nbug:{data.get(bug_field)}")
+    before_file_lines = read_file_lines(code_file_path)
+    start_bug_line_idx = data[start_bug_line_field] - 1
+    end_bug_line_idx = data[end_bug_line_field] - 1
+    bug = data[bug_field]
+    front_lines_list = before_file_lines[:start_bug_line_idx]
+    end_lines_list = before_file_lines[end_bug_line_idx+1:]
+    new_file_lines = front_lines_list + [bug] + end_lines_list 
+    write_lines_to_file(code_file_path, new_file_lines)
+    return before_file_lines
+
+def any_test_fails(final_test_result_dict):
+    if final_test_result_dict[failure_keyword] > 0 or final_test_result_dict[error_keyword] > 0:
+        return False 
+    return True
+
+def execute_test_cases(code_project_path):
+    current_path = os.getcwd()
+    try:
+        os.chdir(code_project_path)
+        print(f"Execute test cases in dir: {code_project_path}")
+        # execute tests 
+        result = subprocess.run(['mvn', 'test'], capture_output=True, text=True, check=True)
+        output = result.stdout
+        return get_mvn_repo_final_test_result(output)
+
+    except FileNotFoundError:
+        print("The specified destination for test execution does not exist.")
+    finally:
+        os.chdir(current_path)
+        print("Current working directory (after returning):", os.getcwd())
+
+def traveProject(bugId,projectPath,repodir, code_project_path):
     listdirs = os.listdir(projectPath)
     for f in listdirs:
         pattern = '*.java'
@@ -78,10 +114,35 @@ def traveProject(bugId,projectPath,repodir):
                     lines = perturbFile.readlines()
                     if len(lines)>0:
                         for k in range(0,len(lines)):
-                            # constructTrainSample(bugId, lines[k], p, repodir, True, rootdir, filePathFromCheckout)
-                            construct_large_train_sample(bugId, lines[k], p, repodir, True, rootdir, filePathFromCheckout)
+                            data = construct_large_train_sample(bugId, lines[k], p, repodir, True, rootdir, filePathFromCheckout)
+                            if data is None:
+                                continue
+                            code_file_path = p.replace("Perturbation-","")
+                            # data = constructTrainSample(bugId, lines[k], p, repodir, True, rootdir, filePathFromCheckout)
+                            
+                            if can_execute_tests:
+                                try:
+                                    before_file_lines = update_temp_code_file(code_file_path, data)
+                                    # execute test cases
+                                    test_result_dict = execute_test_cases(code_project_path)
+                                    if any_test_fails(test_result_dict):
+                                        outputData.append(data)
+                                        addJavaFileInfoToGlobalDict(code_file_path, filePathFromCheckout)
+                                        append_to_file(trainDataTxtFilePath, str(data) + "\n")
+                                except Exception as ex:
+                                    print(f"Error: {ex}")
+                                    data["error"] = "compilation error"
+                                    outputData.append(data)
+                                    addJavaFileInfoToGlobalDict(code_file_path, filePathFromCheckout)
+                                    append_to_file(trainDataTxtFilePath, str(data) + "\n")
+                                finally:
+                                    write_lines_to_file(code_file_path, before_file_lines)
+                            else:
+                                outputData.append(data)
+                                addJavaFileInfoToGlobalDict(code_file_path, filePathFromCheckout)
+                                append_to_file(trainDataTxtFilePath, str(data) + "\n")
         else:
-            traveProject(bugId,p,repodir)
+            traveProject(bugId,p,repodir,code_project_path)
 
     with open(repodir+trainDataJsonFilepath, 'w') as trainDataJsonFile:
         json.dump(outputData, trainDataJsonFile, indent=2)
@@ -235,6 +296,7 @@ def construct_large_train_sample(bugId,line,targetfile,repodir,diagnosticFlag,ro
     
     ctxs = getListOfDictsForContexts(all_file_cxts)
     data = generateDataDict(id, startBugLineNo, endBugLineNo, bug, fix, fixes, err, ctxs, filepathFromCheckoutDir, action)
+    return data 
     outputData.append(data)
     addJavaFileInfoToGlobalDict(codeFilePath, filepathFromCheckoutDir)
     append_to_file(trainDataTxtFilePath, str(data) + "\n")
@@ -342,10 +404,12 @@ def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, f
     err = ''
     # ctxBugLines = [(startContextLineNo, endContextLineNo)]
     
+    # execute test and check whether tests fail 
+
     ctxs = getListOfDictsForContexts([cxt])
     data = generateDataDict(id, startBugLineNo, endBugLineNo, bug, fix, fixes, err, ctxs, filepathFromCheckoutDir, action)
-    print(f"data: {data}")
-    outputData.append(data)
+    return data 
+    outputData.append(data) 
     addJavaFileInfoToGlobalDict(codeFilePath, filepathFromCheckoutDir)
     append_to_file(trainDataTxtFilePath, str(data) + "\n")
 
@@ -622,6 +686,8 @@ def getFailingTestSourceCode(failingtest,program_path):
                         if l not in code:
                             code=l
     return code
+
+can_execute_tests=False 
 
 if __name__ == '__main__':
     # bugIds = ['Lang-65','Chart-26','Math-106','Mockito-38','Time-26','Closure-134','Cli-1','Collections-25','Codec-1','Compress-1','Csv-1','Gson-1','JacksonCore-1','JacksonDatabind-1','JacksonXml-1','Jsoup-1','JxPath-1'] 
