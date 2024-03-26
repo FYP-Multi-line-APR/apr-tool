@@ -147,8 +147,8 @@ def traveProject(bugId,projectPath,repodir, code_project_path):
     with open(repodir+trainDataJsonFilepath, 'w') as trainDataJsonFile:
         json.dump(outputData, trainDataJsonFile, indent=2)
     
-    with open(repodir+codeFilesInfoFilePath, 'w') as codeFilesInfoFile: 
-        json.dump(codeFileInfoDict, codeFilesInfoFile, indent=2)
+    # with open(repodir+codeFilesInfoFilePath, 'w') as codeFilesInfoFile: 
+    #     json.dump(codeFileInfoDict, codeFilesInfoFile, indent=2)
 
     # generateTwoMultiLineBugs()
     # with open(repodir+trainDataTwoMultiLinesJsonFilepath, 'w') as trainDataJsonFile:
@@ -415,11 +415,11 @@ def constructTrainSample(bugId,line,targetfile,repodir,diagnosticFlag,rootdir, f
 
 def addJavaFileInfoToGlobalDict(codeFilePath, filepathFromCheckoutDir):
     global codeFileInfoDict
-    if codeFileInfoDict.get(codeFilePath) is None: 
-        className = extract_class_name_for_file(codeFilePath)
-        methodSignatures = extract_method_signatures_for_file(codeFilePath)
-        infoDict = generateJavaFileInfoDict(className, methodSignatures)
-        codeFileInfoDict[filepathFromCheckoutDir] = infoDict
+    # if codeFileInfoDict.get(codeFilePath) is None: 
+    #     className = extract_class_name_for_file(codeFilePath)
+    #     methodSignatures = extract_method_signatures_for_file(codeFilePath)
+    #     infoDict = generateJavaFileInfoDict(className, methodSignatures)
+    #     codeFileInfoDict[filepathFromCheckoutDir] = infoDict
 
 def generateJavaFileInfoDict(className, methodSignatures): 
     return {

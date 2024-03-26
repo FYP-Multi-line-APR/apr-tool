@@ -5,6 +5,7 @@ prediction_token = "<extra_id_0>"
 bug_token = "[BUG]"
 context_token = "[CONTEXT]"
 context_width = 10
+context_count_deviation = 5
 
 def divide_front_line_range_into_parts(lower_bound, upper_bound, width):
     parts = []
@@ -48,10 +49,14 @@ def filter_full_file_context(file_lines):
 
     # from 0 to start index divide into 2xcontext width 
     front_line_ranges = divide_front_line_range_into_parts(file_start, start_index - 1, context_width * 2)
-    back_line_ranges = divide_back_line_range_into_parts(end_index, file_end, context_width * 2)
     # from end index to file end divide into 2xcontext width 
-    extracted_front_lines_set = extract_lines(file_lines, front_line_ranges)
-    extracted_back_lines_set = extract_lines(file_lines, back_line_ranges)
+    back_line_ranges = divide_back_line_range_into_parts(end_index, file_end, context_width * 2)
+
+    selected_front_line_ranges = front_line_ranges[-context_count_deviation:]
+    selected_back_line_ranges = back_line_ranges[:context_count_deviation]
+
+    extracted_front_lines_set = extract_lines(file_lines, selected_front_line_ranges)
+    extracted_back_lines_set = extract_lines(file_lines, selected_back_line_ranges)
     buggy_lines_set = [file_lines[start_index:end_index + 1]]
     return extracted_front_lines_set + buggy_lines_set + extracted_back_lines_set
 
