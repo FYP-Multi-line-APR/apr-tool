@@ -3,16 +3,23 @@ import os
 import shutil
 import json
 
-id_field = "id"
-filepath_field = "filepath"
-start_bug_line_field = "start-bug-line"
 prediction_token = "<extra_id_0>"
 bug_token = "[BUG]"
 context_token = "[CONTEXT]"
+
+id_field = "id"
+filepath_field = "filepath"
 bug_field = "bug"
 fix_field = "fix"
 ctx_field = "ctxs"
 txt_field = "txt"
+start_bug_line_field = "start-bug-line"
+end_bug_line_field = "end-bug-line"
+
+run_keyword = "Run"
+failure_keyword = "Failure"
+error_keyword = "Error"
+skipped_keyword = "Skipped"
 
 def print_dict(data):
     print(json.dumps(data, indent=2))
@@ -83,6 +90,12 @@ def write_json(file_path, json_data):
     with open(file_path, 'w') as json_file:
         json.dump(json_data, json_file, indent=2)
 
+def write_lines_to_file(file_path, lines):
+    print(f"writing files to: {file_path}")
+    with open(file_path, 'w') as file:
+        for line in lines:
+            file.write(line + '\n')
+
 def write_to_file(file_path, text_to_write):
     try:
         with open(file_path, 'w') as file:
@@ -119,6 +132,33 @@ def make_dir(dir_path):
     else:
         print(f"already exist. dir: {dir_path}")
 
+def read_file_lines(file_path):
+    lines = []
+    with open(file_path, 'r') as file:
+        for line in file:
+            lines.append(line.strip())
+    return lines
+
+def get_mvn_repo_final_test_result(mvn_test_output):
+    final_result = {
+        run_keyword: 0,
+        failure_keyword: 0,
+        error_keyword: 0,
+        skipped_keyword: 0
+    }
+    for line in mvn_test_output.split("\n"):
+        matched_line = re.search(r"Tests run: (\d+), Failures: (\d+), Errors: (\d+), Skipped: (\d+)", line)
+        if matched_line:
+            tests_run = int(matched_line.group(1))
+            failures = int(matched_line.group(2))
+            errors = int(matched_line.group(3))
+            skipped = int(matched_line.group(4))
+
+            final_result[run_keyword] += tests_run
+            final_result[failure_keyword] += failures
+            final_result[error_keyword] += errors
+            final_result[skipped_keyword] += skipped
+    return final_result
 
 if __name__ == "__main__":
     # filepathFromCheckoutDir = "/src/main/java/org/apache/maven/plugin/compiler/CompilerMojo.java"
